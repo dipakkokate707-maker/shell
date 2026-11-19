@@ -1,11 +1,9 @@
 ```bash
 #!/bin/bash
 
-<<task
-Deploy a Django application using Docker
-Install Docker and Nginx
-Handle errors during deployment
-task
+# Deploy Django application using Docker
+# Install Docker and Nginx
+# Handle errors during deployment
 
 code_clone() {
     echo "Cloning the Django app..."
@@ -27,9 +25,8 @@ install_requirements() {
 
     echo "Updating package information..."
 
-    if sudo apt-get update && \
-       sudo apt-get install docker.io nginx -y; then
-        echo "Dependencies installed successfully"
+    if sudo apt-get update && sudo apt-get install docker.io nginx -y; then
+        echo "Docker and Nginx installed successfully"
     else
         echo "ERROR: Dependency installation failed"
         exit 1
@@ -39,8 +36,7 @@ install_requirements() {
 required_restarts() {
     echo "Starting Docker and Nginx..."
 
-    if sudo systemctl enable --now docker && \
-       sudo systemctl enable --now nginx; then
+    if sudo systemctl enable --now docker && sudo systemctl enable --now nginx; then
         echo "Docker and Nginx started successfully"
     else
         echo "ERROR: Failed to start Docker or Nginx"
@@ -69,7 +65,7 @@ deploy() {
 }
 
 echo "================================================"
-echo "        DJANGO APP DEPLOYMENT STARTED"
+echo "       DJANGO APP DEPLOYMENT STARTED"
 echo "================================================"
 
 code_clone
@@ -80,15 +76,12 @@ cd django-notes-app || {
 }
 
 install_requirements
-
 required_restarts
-
 deploy
 
 echo "================================================"
-echo "        DJANGO APP DEPLOYMENT COMPLETED"
+echo "       DJANGO APP DEPLOYMENT COMPLETED"
 echo "================================================"
 
-echo "Application should be available on:"
+echo "Application URL:"
 echo "http://<EC2-PUBLIC-IP>:8000"
-```
