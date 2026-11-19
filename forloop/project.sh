@@ -1,4 +1,4 @@
-```bash
+
 #!/bin/bash
 
 # Deploy Django application using Docker
