@@ -1,87 +1,50 @@
 
 #!/bin/bash
 
-# Deploy Django application using Docker
-# Install Docker and Nginx
-# Handle errors during deployment
+<<task
+deploy a django app
+and handle the code for errors
+task
 
-code_clone() {
-    echo "Cloning the Django app..."
-
-    if git clone https://github.com/dipakkokate707-maker/django-notes-app.git; then
-        echo "Code cloned successfully"
-    else
-        echo "ERROR: Code cloning failed"
-        exit 1
-    fi
+code_clone(){
+echo "cloning the django app..."
+git clone repoip
 }
 
-install_requirements() {
-    echo "Installing dependencies..."
-
-    echo "Cleaning APT cache..."
-    sudo apt-get clean
-    sudo rm -rf /var/lib/apt/lists/*
-
-    echo "Updating package information..."
-
-    if sudo apt-get update && sudo apt-get install docker.io nginx -y; then
-        echo "Docker and Nginx installed successfully"
-    else
-        echo "ERROR: Dependency installation failed"
-        exit 1
-    fi
+install_requirements(){
+echo "installing dependencies"
+sudo apt-get install docker.io nginx -y
 }
 
-required_restarts() {
-    echo "Starting Docker and Nginx..."
-
-    if sudo systemctl enable --now docker && sudo systemctl enable --now nginx; then
-        echo "Docker and Nginx started successfully"
-    else
-        echo "ERROR: Failed to start Docker or Nginx"
-        exit 1
-    fi
+required_restarts(){
+sudo systemctl enable docker
+sudo systemctl enable nginx
+sudo chown $USER /var/run/docker.sock
+sudo systemctl restart docker
 }
 
 deploy() {
-    echo "Building Docker image..."
-
-    if docker build -t notes-app .; then
-        echo "Docker image built successfully"
-    else
-        echo "ERROR: Docker image build failed"
-        exit 1
-    fi
-
-    echo "Starting Docker container..."
-
-    if docker run -d -p 8000:8000 --name notes-app-container notes-app:latest; then
-        echo "Docker container started successfully"
-    else
-        echo "ERROR: Docker container failed to start"
-        exit 1
-    fi
+docker build -t notes-app .
+docker run -d -p 8000:8000 notes-app:latest
 }
 
-echo "================================================"
-echo "       DJANGO APP DEPLOYMENT STARTED"
-echo "================================================"
+echo "************deployment started*************"
 
-code_clone
+if ! code_clone ; then
+echo "the code directory exists"
+cd django-notes-app
+fi
 
-cd django-notes-app || {
-    echo "ERROR: Django application directory not found"
-    exit 1
-}
+if ! install_requirements ; then
+echo "install failed"
+exit 1
+fi
 
-install_requirements
-required_restarts
+if ! required_restarts; then
+echo "system fault"
+exit 1
+fi
+
 deploy
 
-echo "================================================"
-echo "       DJANGO APP DEPLOYMENT COMPLETED"
-echo "================================================"
-
-echo "Application URL:"
-echo "http://<EC2-PUBLIC-IP>:8000"
+echo "*****************deployment done***************"
