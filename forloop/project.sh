@@ -1,50 +1,70 @@
-
 #!/bin/bash
 
-<<task
-deploy a django app
-and handle the code for errors
-task
+# Deploy a Django app and handle errors
+set -u
 
-code_clone(){
-echo "cloning the django app..."
-git clone https://github.com/dipakkokate707-maker/django-notes-app.git
+code_clone() {
+    echo "Cloning the Django app..."
+    if [ -d "django-notes-app" ]; then
+        echo "The code directory already exists. Skipping clone."
+    else
+        git clone https://github.com/LondheShubham153/django-notes-app.git || {
+            echo "Failed to clone the code."
+            return 1
+        }
+    fi
 }
 
-install_requirements(){
-echo "installing dependencies"
-sudo apt-get install docker.io nginx -y
+install_requirements() {
+    echo "Installing dependencies..."
+    sudo apt-get update && sudo apt-get install -y docker.io nginx docker-compose-v2 || {
+        echo "Failed to install dependencies."
+        return 1
+    }
 }
 
-required_restarts(){
-sudo systemctl enable docker
-sudo systemctl enable nginx
-sudo chown $USER /var/run/docker.sock
-sudo systemctl restart docker
+required_restarts() {
+    echo "Performing required restarts..."
+    sudo chown "$USER" /var/run/docker.sock || {
+        echo "Failed to change ownership of docker.sock."
+        return 1
+    }
+
+    # sudo systemctl enable docker
+    # sudo systemctl enable nginx
+    # sudo systemctl restart docker
 }
 
 deploy() {
-docker build -t notes-app .
-docker run -d -p 8000:8000 notes-app:latest
+    echo "Building and deploying the Django app..."
+    docker build -t notes-app . && docker compose up -d || {
+        echo "Failed to build and deploy the app."
+        return 1
+    }
 }
 
-echo "************deployment started*************"
+echo "********** DEPLOYMENT STARTED *********"
 
-if ! code_clone ; then
-echo "the code directory exists"
-cd django-notes-app
+# Clone the code; stop if it fails
+if ! code_clone; then
+    exit 1
 fi
 
-if ! install_requirements ; then
-echo "install failed"
-exit 1
+# Move into the repo so Dockerfile and docker-compose.yml are found
+cd django-notes-app || exit 1
+
+if ! install_requirements; then
+    exit 1
 fi
 
 if ! required_restarts; then
-echo "system fault"
-exit 1
+    exit 1
 fi
 
-deploy
+if ! deploy; then
+    echo "Deployment failed. Mailing the admin..."
+    # Add your sendmail or notification logic here
+    exit 1
+fi
 
-echo "*****************deployment done***************"
+echo "********** DEPLOYMENT DONE *********"
